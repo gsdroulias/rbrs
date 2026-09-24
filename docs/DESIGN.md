@@ -252,5 +252,41 @@ Run manifest
 
 Every experiment writes results/<exp\_id>/manifest.json containing the git commit, a hash of all configuration files, the seed, the model ID and thinking level (for extraction runs), the Python and package versions, the start and end timestamps, and summed token usage. A result without a manifest does not go into the paper.
 
+### Finalized Interfaces (Step 3)
 
+**1. SMEProfile Schema (17 Attributes)**
+- `sector` (str)
+- `employees_fte` (int)
+- `turnover_meur` (float | None)
+- `scope1`, `scope2`, `scope3` (Emissions)
+- `energy_carriers` (list[str])
+- `electricity_supply` (Literal["grid", "grid_mixed", "green_tariff", "onsite"])
+- `thermal_fuel` (str | None)
+- `residues` (list[ResidueStream])
+- `certifications` (list[str])
+- `capital_availability` (Literal["low", "low_moderate", "moderate", "high"])
+- `maturity_level` (Literal[1, 2, 3])
+- `logistics_mode` (Literal["diesel_truck", "rail", "electric_van"])
+- `route_distance_km` (float | None)
+- `material_type` (str)
+- `process_efficiency` (Literal["low", "medium", "high"])
+
+**2. Extraction Schemas**
+- `Provenance`: page (int), section (str | None), quote (str).
+- `ExtractedField`: field (str), value (Any), status (EXTRACTED | ABSTAINED), confidence (float), provenance (Provenance), verified_in_source (bool).
+- `ExtractionRecord`: Contains a list of `ExtractedField` objects.
+
+**3. Rule YAML Schema**
+- `id` (str): Unique identifier (e.g., "E1").
+- `name` (str): Human-readable name.
+- `antecedent` (list[dict]): e.g., `[{"field": "electricity_supply", "op": "==", "value": "grid_mixed"}]`.
+- `maturity_gate` (int | None): Minimum maturity level required.
+- `capital_gate` (str | None): Minimum capital required.
+- `consequent` (str): The triggered action ID.
+- `provenance` (str): Literature source or expert validation.
+
+**4. Typer CLI Commands**
+- `rbrs run --profile <path.yaml> --weights <str> --norm <str>`: Executes the decision layer and outputs JSON/CSV/Report.
+- `rbrs rules --stats`: Loads YAML rules and reports counts, dead rules, and validation errors.
+- `rbrs synthetic --generate --n 100`: Generates synthetic SME profiles for testing (E11).
 
