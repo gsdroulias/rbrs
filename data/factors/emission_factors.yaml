@@ -1,0 +1,4 @@
+﻿- id: "diesel_combustion"
+  value: 0.000074
+  unit: "tCO2/MJ"
+  source: "EPA 2024 Emission Factors Hub"
