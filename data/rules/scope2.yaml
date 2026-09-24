@@ -1,0 +1,9 @@
+﻿- id: S2-001
+  name: High-efficiency equipment and LED retrofit
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+    - {field: electricity_supply, op: in, value: [grid, grid_mixed]}
+  maturity_gate: 1
+  capital_gate: null
+  consequent: INT-LED-EFF
+  provenance: "IPCC 2022 Mitigation Report"
