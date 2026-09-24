@@ -1,0 +1,14 @@
+[importlinter]
+root_packages =
+    rbrs
+
+[importlinter:contract:1]
+name = Extraction layer must never import decision modules
+type = forbidden
+source_modules =
+    rbrs.extraction
+forbidden_modules =
+    rbrs.rules
+    rbrs.inference
+    rbrs.constraints
+    rbrs.scoring
