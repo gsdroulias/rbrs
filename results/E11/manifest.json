@@ -1,0 +1,11 @@
+{
+  "experiment": "E11",
+  "timestamp": 1790419764.0883079,
+  "description": "Synthetic Cohort Generation for statistical analysis.",
+  "samples": 100,
+  "intervention_frequencies": {
+    "INT-ROUTE-OPT": 34,
+    "INT-LED-EFF": 100,
+    "INT-SOLAR-PV": 49
+  }
+}

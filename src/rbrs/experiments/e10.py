@@ -1,5 +1,7 @@
-﻿import typer
-from pathlib import Path
+﻿from pathlib import Path
+
+import typer
+
 
 def run_e10() -> None:
     out_dir = Path("results/E10")

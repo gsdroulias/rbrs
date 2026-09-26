@@ -1,0 +1,10 @@
+{
+  "experiment": "E4",
+  "timestamp": 1790236815.995976,
+  "profile": "data/cases/case_A.yaml",
+  "weights": "default",
+  "norm": "total_absolute",
+  "recommendations": [
+    "INT-LED-EFF"
+  ]
+}

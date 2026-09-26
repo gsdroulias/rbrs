@@ -1,0 +1,38 @@
+﻿- id: S1-001
+  name: Fleet route optimization
+  antecedent:
+    - {field: scope1.tco2e, op: ">", value: 0}
+    - {field: logistics_mode, op: in, value: [diesel_truck, electric_van]}
+  maturity_gate: 2
+  capital_gate: low
+  consequent: INT-ROUTE-OPT
+  provenance: "WBCSD/Route Monkey (2016), Road Freight Lab"
+
+- id: S2-001
+  name: High-efficiency equipment and LED retrofit
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+    - {field: electricity_supply, op: in, value: [grid, grid_mixed]}
+  maturity_gate: 1
+  capital_gate: null
+  consequent: INT-LED-EFF
+  provenance: "IPCC AR6 WGIII (2022), Chapter 11 Industry"
+
+- id: S2-002
+  name: On-site Solar PV installation
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+    - {field: capital_availability, op: in, value: [moderate, high]}
+  maturity_gate: 2
+  capital_gate: moderate
+  consequent: INT-SOLAR-PV
+  provenance: "IEA (2019), Renewables 2019"
+
+- id: S3C-001
+  name: Residue material recovery (Constraint-bound)
+  antecedent:
+    - {field: residues, op: any_has, value: "biomass"}
+  maturity_gate: 3
+  capital_gate: moderate
+  consequent: INT-BIOFUEL-SHIFT
+  provenance: "Puettmann & Lippke (2012), Forest Products Journal 62(4):273-279"
