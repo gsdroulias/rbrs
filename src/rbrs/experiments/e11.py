@@ -1,13 +1,11 @@
-﻿import csv
-import json
-import random
+﻿import json
 import time
+import random
+import csv
 from pathlib import Path
-
-from rbrs.inference.engine import InferenceEngine
-from rbrs.profile.models import Emissions, SMEProfile
+from rbrs.profile.models import SMEProfile, Emissions, ResidueStream
 from rbrs.rules.models import load_rules
-
+from rbrs.inference.engine import InferenceEngine
 
 def run_e11(num_samples: int = 100) -> None:
     out_dir = Path("results/E11")
@@ -22,6 +20,18 @@ def run_e11(num_samples: int = 100) -> None:
     
     for i in range(num_samples):
         sector = random.choice(sectors)
+        has_biomass = random.random() < 0.30
+        
+        # FIXED: Η διάθεση είναι "energy_recovery" σύμφωνα με το Pydantic Schema
+        residues_list = [
+            ResidueStream(
+                material="biomass", 
+                mass_t=50.0, 
+                disposition="energy_recovery",
+                moisture_content=0.15
+            )
+        ] if has_biomass else []
+        
         profile = SMEProfile(
             sector=sector,
             employees_fte=random.randint(10, 250),
@@ -32,7 +42,7 @@ def run_e11(num_samples: int = 100) -> None:
             energy_carriers=["electricity", "diesel"] if sector in ["Manufacturing", "Logistics"] else ["electricity"],
             electricity_supply="grid_mixed",
             thermal_fuel="diesel" if sector == "Manufacturing" else "none",
-            residues=[],
+            residues=residues_list,
             certifications=[],
             capital_availability=random.choice(["low", "moderate", "high"]),
             maturity_level=random.choice([1, 2, 3]),  # type: ignore
@@ -52,18 +62,16 @@ def run_e11(num_samples: int = 100) -> None:
         for r in recs:
             intervention_counts[r] = intervention_counts.get(r, 0) + 1
             
-    # Εξαγωγή του dataset σε CSV
     csv_path = out_dir / "cohort_results.csv"
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["id", "sector", "recommendations"])
         writer.writeheader()
         writer.writerows(results)
         
-    # Εξαγωγή Manifest
     manifest = {
         "experiment": "E11",
         "timestamp": time.time(),
-        "description": "Synthetic Cohort Generation for statistical analysis.",
+        "description": "Synthetic Cohort Generation. Now successfully testing constraint-bound biomass shifts.",
         "samples": num_samples,
         "intervention_frequencies": intervention_counts
     }
@@ -72,7 +80,6 @@ def run_e11(num_samples: int = 100) -> None:
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
         
-    print("\n--- SUCCESS ---")
+    print(f"\n--- SUCCESS ---")
     print(f"Experiment E11: Generated {num_samples} synthetic SMEs.")
     print(f"Intervention frequencies: {intervention_counts}")
-    print(f"Data saved to {out_dir}")
