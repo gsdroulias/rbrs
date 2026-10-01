@@ -1,0 +1,33 @@
+# E5 weight sensitivity.
+#
+# Criterion scores (I, F, C) of the five interventions in the manuscript's case,
+# in the published rank order, copied from REQUIREMENTS.md AC-01.
+# TODO(author): cite the manuscript table and name each intervention. Only M4
+# is identifiable from AC-01 itself ("solar PV becomes top-ranked from
+# W_I ~ 0.615"; M4 is the only candidate that can).
+source: "REQUIREMENTS.md AC-01 (manuscript criterion scores)"
+candidates:
+  - {label: M1, intervention_id: null, impact: 0.50, feasibility: 1.00, cost_effectiveness: 1.00}
+  - {label: M2, intervention_id: null, impact: 0.75, feasibility: 0.75, cost_effectiveness: 0.50}
+  - {label: M3, intervention_id: null, impact: 0.50, feasibility: 0.75, cost_effectiveness: 1.00}
+  - {label: M4, intervention_id: INT-SOLAR-PV, impact: 1.00, feasibility: 0.25, cost_effectiveness: 0.25}
+  - {label: M5, intervention_id: null, impact: 0.75, feasibility: 0.50, cost_effectiveness: 0.50}
+# One-dimensional sweep: W_I varies, W_F:W_C held at this ratio (AC-01).
+fc_ratio: [3, 2]
+grid_step: 0.005
+# AC-01 statements, checked against the computed values (3 decimals).
+ac01:
+  published_order_interval: [0.500, 0.545]
+  tie_ranks: [4, 5]
+  tie_at_w_i: 0.500
+  top_candidate: M4
+  top_from_w_i: 0.615
+# Dirichlet weight samples (NFR-11: 10,000 samples).
+dirichlet:
+  samples: 10000
+  # uniform over the weight simplex, and concentrated around the default weights
+  # (alpha = concentration x default); the concentration is a sensitivity choice.
+  designs:
+    - {name: uniform, alpha: [1.0, 1.0, 1.0]}
+    - {name: centred_default, concentration: 30.0}
+default_weights: [0.50, 0.30, 0.20]

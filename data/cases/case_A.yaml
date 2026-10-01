@@ -1,4 +1,6 @@
-﻿sector: "Manufacturing"
+# Illustrative manufacturing SME used for the E4 pipeline demonstration.
+# This is not the manuscript's case firm (which has wood residues; see AC-05).
+sector: "Manufacturing"
 employees_fte: 45
 turnover_meur: 4.2
 scope1: {tco2e: 120.5, assessed: true}

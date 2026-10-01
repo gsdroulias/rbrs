@@ -1,3 +1,23 @@
-﻿from .engine import InferenceEngine, TraceRecord, chain_report
+from .engine import (
+    CandidateMatch,
+    InferenceEngine,
+    InferenceResult,
+    RuleEvaluationError,
+    TraceRecord,
+    activation_stats,
+    chain_report,
+    evaluate_condition,
+    gate_failure,
+)
 
-__all__ = ["InferenceEngine", "TraceRecord", "chain_report"]
+__all__ = [
+    "CandidateMatch",
+    "InferenceEngine",
+    "InferenceResult",
+    "RuleEvaluationError",
+    "TraceRecord",
+    "activation_stats",
+    "chain_report",
+    "evaluate_condition",
+    "gate_failure",
+]

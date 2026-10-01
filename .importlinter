@@ -1,4 +1,5 @@
 [importlinter]
+include_external_packages = True
 root_packages =
     rbrs
 
@@ -12,3 +13,32 @@ forbidden_modules =
     rbrs.inference
     rbrs.constraints
     rbrs.scoring
+    rbrs.pipeline
+    rbrs.experiments
+    rbrs.analysis
+    rbrs.synthetic
+    rbrs.audit
+
+[importlinter:contract:2]
+name = Decision layers depend downwards only (L5 scoring > L4 constraints > L3 inference > L2 rules > L1 profile)
+type = layers
+layers =
+    rbrs.scoring
+    rbrs.constraints
+    rbrs.inference
+    rbrs.rules
+    rbrs.profile
+
+[importlinter:contract:3]
+name = Decision layer never imports the LLM SDK
+type = forbidden
+source_modules =
+    rbrs.profile
+    rbrs.rules
+    rbrs.inference
+    rbrs.constraints
+    rbrs.scoring
+    rbrs.pipeline
+forbidden_modules =
+    google
+allow_indirect_imports = False

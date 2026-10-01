@@ -1,13 +1,27 @@
-from .models import Emissions, ExtractedField, Provenance, ResidueStream, SMEProfile
+from .models import (
+    CAPITAL_ORDER,
+    PROFILE_ATTRIBUTES,
+    SOURCE_NEEDED,
+    CapitalLevel,
+    Emissions,
+    ExtractedField,
+    ExtractionRecord,
+    Provenance,
+    ResidueStream,
+    SMEProfile,
+    profile_coverage,
+)
 
 __all__ = [
+    "CAPITAL_ORDER",
+    "PROFILE_ATTRIBUTES",
+    "SOURCE_NEEDED",
+    "CapitalLevel",
     "Emissions",
     "ExtractedField",
+    "ExtractionRecord",
     "Provenance",
     "ResidueStream",
     "SMEProfile",
+    "profile_coverage",
 ]
-
-def profile_coverage() -> list[str]:
-    """Stub for FR-16: Returns a list of profile attributes never read by any rule."""
-    return []

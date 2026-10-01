@@ -1,0 +1,13 @@
+# AC-10: profile attributes that no active rule reads, each with a reason.
+# Drafted for the author to confirm. `rbrs audit` fails for any unread attribute
+# that is not listed here.
+
+sector: "Descriptive; used to stratify and report results, not as a rule condition."
+employees_fte: "Used only to confirm SME status (EU Recommendation 2003/361/EC); no rule conditions on firm size."
+turnover_meur: "As employees_fte."
+energy_carriers: "Informational; rules read the more specific thermal_fuel and electricity_supply."
+material_type: "Reserved for Scope 3 material-substitution rules, which need sourced factors first."
+scope3: "Read only by draft rules (S3-001, normalisation of Scope 3 effects)."
+process_efficiency: "Read only by draft rules."
+certifications: "Read only by draft rules."
+route_distance_km: "Read only by draft rules."

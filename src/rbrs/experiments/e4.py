@@ -1,45 +1,45 @@
-﻿import json
-import time
-from pathlib import Path
+"""E4: decision-layer runs for the case firms (FR-13)."""
 
-import yaml
+from typing import Any
 
-from rbrs.inference.engine import InferenceEngine
-from rbrs.profile.models import SMEProfile
-from rbrs.rules.models import load_rules
-from rbrs.scoring.saw import Candidate, SAWScorer
+from rbrs.experiments.common import load_cases, start_run, write_text
+from rbrs.pipeline import KnowledgeBase, recommend, report_to_csv, report_to_json, report_to_markdown
+from rbrs.scoring import NormMode, Weights
 
 
-def run_e4(profile_path: str, weights: str = "default", norm: str = "total_absolute") -> None:
-    out_dir = Path("results/E4")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    
-    with open(profile_path, "r", encoding="utf-8") as f:
-        profile_data = yaml.safe_load(f)
-    profile = SMEProfile(**profile_data)
-    
-    rules = load_rules("data/rules")
-    engine = InferenceEngine(rules)
-    recs = engine.run(profile)
-    
-    # Απλοποιημένο scoring για τη διαδρομή (pipeline)
-    scorer = SAWScorer()
-    candidates = [Candidate(id=r, impact=0.5, feasibility=0.5, cost_effectiveness=0.5) for r in recs]
-    ranked = scorer.rank(candidates)
-    
-    manifest = {
-        "experiment": "E4",
-        "timestamp": time.time(),
-        "profile": profile_path,
-        "weights": weights,
-        "norm": norm,
-        "recommendations": [r.candidate.id for r in ranked]
+def run_e4(
+    cases_dir: str = "data/cases",
+    weights: str = "default",
+    norm: NormMode = "total_absolute",
+    include_drafts: bool = False,
+    allow_dirty: bool = True,
+) -> dict[str, Any]:
+    w = Weights.parse(weights)
+    run = start_run(
+        "E4",
+        params={"cases_dir": cases_dir, "weights": w.model_dump(), "norm": norm, "include_drafts": include_drafts},
+        allow_dirty=allow_dirty,
+    )
+    kb = KnowledgeBase.load(include_drafts=include_drafts)
+    reports = []
+    for case_id, profile in load_cases(cases_dir).items():
+        rep = recommend(profile, kb, w, norm, profile_id=case_id)
+        reports.append(rep)
+        write_text(run.path(f"{case_id}.json"), report_to_json(rep))
+        write_text(run.path(f"{case_id}.md"), report_to_markdown(rep))
+    write_text(run.path("recommendations.csv"), report_to_csv(reports))
+    summary = {
+        r.profile_id: {
+            "ranking": r.ranking,
+            "unquantified": [s.intervention_id for s in r.interventions if s.status == "UNQUANTIFIED"],
+        }
+        for r in reports
     }
-    
-    manifest_path = out_dir / "manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-        
-    print("\n--- SUCCESS ---")
-    print(f"E4 run complete! Manifest saved to {manifest_path}")
-    print(f"Recommendations found: {[r.candidate.id for r in ranked]}")
+    ranked_any = any(r.ranking for r in reports)
+    notes = (
+        []
+        if ranked_any
+        else ["No candidate could be ranked: interventions lack sourced I/F/C data (see `rbrs audit`)."]
+    )
+    run.finish("COMPLETED" if ranked_any else "BLOCKED", summary, notes=notes)
+    return summary

@@ -1,0 +1,99 @@
+# Intervention catalogue. Each rule consequent must appear here.
+#
+# effects[].change_fraction: expected change in that scope's emissions as a
+#   fraction of the firm's current value (negative = reduction).
+# feasibility, cost_effectiveness: FR-10 levels {0.25, 0.50, 0.75, 1.00}.
+#
+# Every number needs its own source. Until one is supplied the value stays null,
+# the candidate is reported as UNQUANTIFIED, and it is not ranked. The author's
+# manuscript scores (I, F, C) belong here, each with its justification.
+
+- id: INT-ROUTE-OPT
+  name: Fleet route optimization
+  hierarchy: reduce
+  effects: [{scope: scope1, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-LED-EFF
+  name: High-efficiency equipment and LED retrofit
+  hierarchy: reduce
+  effects: [{scope: scope2, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-SOLAR-PV
+  name: On-site solar PV
+  hierarchy: replace
+  effects: [{scope: scope2, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-RESIDUE-MATERIAL
+  name: Divert wood residues from combustion to material use
+  hierarchy: avoid
+  residue_diversion:
+    material: wood
+    from_disposition: energy_recovery
+    to_disposition: material_recovery
+    lhv_dry_factor: lhv_dry_wood
+    boiler_efficiency_factor: eta_boiler_replacement
+    replacement_fuel_factor: natural_gas_combustion
+    displaced_virgin_factor: ef_displaced_virgin_wood_material
+    biogenic_factor: wood_combustion_biogenic_co2
+
+- id: INT-FLEET-EV
+  name: Fleet electrification
+  hierarchy: replace
+  effects:
+    - {scope: scope1, change_fraction: null, source: SOURCE_NEEDED}
+    - {scope: scope2, change_fraction: null, source: SOURCE_NEEDED}
+
+- id: INT-ECO-DRIVING
+  name: Eco-driving training
+  hierarchy: reduce
+  effects: [{scope: scope1, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-MODAL-RAIL
+  name: Modal shift of freight to rail
+  hierarchy: replace
+  effects:
+    - {scope: scope1, change_fraction: null, source: SOURCE_NEEDED}
+    - {scope: scope3, change_fraction: null, source: SOURCE_NEEDED}
+
+- id: INT-HEAT-PUMP
+  name: Heat pump for low-temperature process heat
+  hierarchy: replace
+  effects:
+    - {scope: scope1, change_fraction: null, source: SOURCE_NEEDED}
+    - {scope: scope2, change_fraction: null, source: SOURCE_NEEDED}
+
+- id: INT-BOILER-EFF
+  name: Boiler and burner efficiency upgrade
+  hierarchy: reduce
+  effects: [{scope: scope1, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-HEAT-RECOVERY
+  name: Waste heat recovery
+  hierarchy: reduce
+  effects: [{scope: scope1, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-GREEN-TARIFF
+  name: Green electricity tariff or PPA
+  hierarchy: replace
+  instrument: market_based
+  effects: [{scope: scope2, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-ENMS
+  name: Energy management system (ISO 50001)
+  hierarchy: reduce
+  effects:
+    - {scope: scope1, change_fraction: null, source: SOURCE_NEEDED}
+    - {scope: scope2, change_fraction: null, source: SOURCE_NEEDED}
+
+- id: INT-ENERGY-AUDIT
+  name: Energy audit
+  hierarchy: enabling
+
+- id: INT-LANDFILL-DIVERSION
+  name: Divert residues from landfill
+  hierarchy: avoid
+  effects: [{scope: scope3, change_fraction: null, source: SOURCE_NEEDED}]
+
+- id: INT-SCOPE3-INVENTORY
+  name: Establish a Scope 3 inventory
+  hierarchy: enabling

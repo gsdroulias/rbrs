@@ -1,72 +1,82 @@
-﻿import json
-import time
-from pathlib import Path
+"""E6: constraint layer (FR-09) - energy substitution, biogenic CO2, scope
+shifting and additionality, computed from cited factors only (AC-05)."""
 
-from rbrs.inference.engine import InferenceEngine
-from rbrs.profile.models import Emissions, SMEProfile
-from rbrs.rules.models import load_rules
+from typing import Any
+
+from rbrs.constraints import evaluate_constraints
+from rbrs.experiments.common import load_cases, start_run, write_csv, write_json
+from rbrs.pipeline import KnowledgeBase, recommend
+from rbrs.synthetic import generate_cohort
+
+AC05_INTERVENTION = "INT-RESIDUE-MATERIAL"
 
 
-def run_e6() -> None:
-    out_dir = Path("results/E6")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 1. Δημιουργία ενός συνθετικού προφίλ εταιρείας Logistics (Mypy fix: χρήση Emissions)
-    profile = SMEProfile(
-        sector="Logistics",
-        employees_fte=50,
-        turnover_meur=5.0,
-        scope1=Emissions(tco2e=500.0, assessed=True),
-        scope2=Emissions(tco2e=50.0, assessed=True),
-        scope3=Emissions(tco2e=0.0, assessed=False),
-        energy_carriers=["diesel"],
-        electricity_supply="grid_mixed",
-        thermal_fuel="none",
-        residues=[],
-        certifications=[],
-        capital_availability="high",
-        maturity_level=3,
-        logistics_mode="diesel_truck",
-        route_distance_km=1000.0,
-        material_type="none",
-        process_efficiency="low"
-    )
-    
-    # 2. Φόρτωση της μηχανής κανόνων
-    rules = load_rules("data/rules")
-    engine = InferenceEngine(rules)
-    recs = engine.run(profile)
-    
-    # 3. Προσομοίωση του Constraint Evaluation (net_delta)
-    results = {
-        "INT-EV-FLEET": {
-            "net_delta": -120.5, 
-            "status": "approved", 
-            "reason": "Reduces Scope 1 without significant Scope 2/3 penalty."
-        },
-        "INT-BIOFUEL-SHIFT": {
-            "net_delta": +45.2, 
-            "status": "rejected", 
-            "reason": "Burden shifting detected: Scope 1 reduction is offset by upstream Scope 3 agricultural emissions."
+def run_e6(cases_dir: str = "data/cases", include_drafts: bool = False, allow_dirty: bool = True) -> dict[str, Any]:
+    run = start_run("E6", params={"cases_dir": cases_dir, "include_drafts": include_drafts}, allow_dirty=allow_dirty)
+    kb = KnowledgeBase.load(include_drafts=include_drafts)
+    cases = load_cases(cases_dir)
+
+    # AC-05: diverting wood residues from combustion, evaluated directly for every
+    # case with such a stream, whether or not the rule's gates would fire.
+    iv = kb.interventions[AC05_INTERVENTION]
+    rd = iv.residue_diversion
+    assert rd is not None
+    ac05: dict[str, Any] = {}
+    for case_id, profile in cases.items():
+        if not any(s.material == rd.material and s.disposition == rd.from_disposition for s in profile.residues):
+            continue
+        cr = evaluate_constraints(iv, profile, kb.factors)
+        ac05[case_id] = {
+            "status": "COMPUTED" if cr.net_delta_t is not None else "BLOCKED",
+            "net_delta_t": cr.net_delta_t,
+            "changes_t": cr.changes_t,
+            "biogenic_co2_t_separate_line": cr.biogenic_co2_t,
+            "flags": cr.flags,
+            "missing": cr.missing,
+            "details": cr.details,
         }
+    write_json(run.path("ac05_energy_substitution.json"), ac05)
+
+    # Constraint outcomes for every recommended candidate, cases and synthetic cohort.
+    rows: list[dict[str, Any]] = []
+    profiles = list(cases.items()) + generate_cohort()
+    for pid, profile in profiles:
+        for s in recommend(profile, kb, profile_id=pid).interventions:
+            rows.append(
+                {
+                    "profile_id": pid,
+                    "intervention_id": s.intervention_id,
+                    "net_delta_t": s.net_delta_t,
+                    "flags": "|".join(s.flags),
+                    "missing": "|".join(s.missing),
+                }
+            )
+    write_csv(
+        run.path("constraint_outcomes.csv"),
+        rows,
+        columns=["profile_id", "intervention_id", "net_delta_t", "flags", "missing"],
+    )
+    flag_counts: dict[str, int] = {}
+    for r in rows:
+        for f in filter(None, r["flags"].split("|")):
+            flag_counts[f] = flag_counts.get(f, 0) + 1
+
+    computed = [k for k, v in ac05.items() if v["status"] == "COMPUTED"]
+    notes = []
+    if not ac05:
+        notes.append(
+            "AC-05 not evaluated: no case has a wood stream burned for energy. "
+            "Add the manuscript case firm to data/cases/."
+        )
+    elif not computed:
+        missing = sorted({m for v in ac05.values() for m in v["missing"]})
+        notes.append(f"AC-05 blocked by missing inputs: {missing}")
+    summary = {
+        "ac05": {
+            k: {"status": v["status"], "net_delta_t": v["net_delta_t"], "flags": v["flags"]} for k, v in ac05.items()
+        },
+        "flag_counts": dict(sorted(flag_counts.items())),
+        "candidates_evaluated": len(rows),
     }
-    
-    # 4. Εξαγωγή του E6 Manifest (Ruff fix: χρήση της μεταβλητής recs)
-    manifest = {
-        "experiment": "E6",
-        "timestamp": time.time(),
-        "description": "Validation of environmental constraints and prevention of burden shifting (net_delta > 0).",
-        "profile_sector": profile.sector,
-        "base_recommendations": recs,
-        "evaluations": results
-    }
-    
-    manifest_path = out_dir / "manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-        
-    print("\n--- SUCCESS ---")
-    print("Experiment E6: Burden Shifting & Constraints Validation complete.")
-    print(f"Base recommendations triggered: {recs}")
-    print(f"Rejected interventions due to burden shifting: {[k for k,v in results.items() if v['status'] == 'rejected']}")
-    print(f"Manifest saved to {manifest_path}")
+    run.finish("COMPLETED" if computed else "BLOCKED", summary, notes=notes)
+    return summary

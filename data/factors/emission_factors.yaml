@@ -1,4 +1,35 @@
-﻿- id: "diesel_combustion"
+# Emission factors. Rules (NFR-07, AC-07):
+#   - status "cited": value + full source. status "SOURCE_NEEDED": value null.
+#   - verified_by_author: set to true only after checking the value against the
+#     cited document (table, page, edition). `rbrs audit` lists unverified ones.
+#   - units are checked by the code; tCO2/MJ is on a net calorific value basis.
+
+- id: diesel_combustion
   value: 0.000074
   unit: "tCO2/MJ"
   source: "EPA 2024 Emission Factors Hub"
+  verified_by_author: false
+  notes: >-
+    Value kept from the original file. Check the basis: EPA Hub factors are per
+    higher heating value (73.96 kg CO2/mmBtu, about 0.0701 kg/MJ HHV), whereas
+    0.000074 tCO2/MJ matches the IPCC 2006 net-calorific-value default for
+    gas/diesel oil (74,100 kg CO2/TJ). Cite whichever document the value comes from.
+
+- id: natural_gas_combustion
+  value: 0.0000561
+  unit: "tCO2/MJ"
+  source: "IPCC (2006) Guidelines for National GHG Inventories, Vol. 2 Energy, Ch. 2, Table 2.2 (natural gas, 56,100 kg CO2/TJ)"
+  verified_by_author: false
+
+- id: wood_combustion_biogenic_co2
+  value: 0.000112
+  unit: "tCO2/MJ"
+  source: "IPCC (2006) Guidelines for National GHG Inventories, Vol. 2 Energy, Ch. 2, Table 2.2 (wood/wood waste, 112,000 kg CO2/TJ); biogenic, reported separately"
+  verified_by_author: false
+
+- id: ef_displaced_virgin_wood_material
+  value: null
+  unit: "tCO2/t"
+  source: SOURCE_NEEDED
+  status: SOURCE_NEEDED
+  notes: "Cradle-to-gate emissions of the virgin material the diverted residue replaces (e.g. from the Puettmann & Lippke LCA cited by S3C-001)."

@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from rbrs!")
+"""Rule-Based Reasoning System for SME decarbonisation (research prototype)."""

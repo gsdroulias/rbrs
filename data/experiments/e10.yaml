@@ -1,0 +1,7 @@
+# E10 Monte Carlo stress test: robustness of the decision to noise in the
+# extracted quantities (a stand-in for extraction error). Each draw multiplies
+# every numeric quantity by an independent lognormal factor exp(N(0, sigma)).
+seed: 42
+draws: 1000
+sigmas: [0.05, 0.10, 0.20, 0.30]
+fields: [scope1.tco2e, scope2.tco2e, scope3.tco2e, route_distance_km, residues.mass_t]

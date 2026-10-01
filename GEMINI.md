@@ -1,4 +1,4 @@
-﻿# RBRS research prototype - agent rules
+# RBRS research prototype - agent rules
 Purpose: reproducible research prototype for a journal paper. Every number in the
 paper comes from this code. Correctness and reproducibility outrank features.
 Read docs/REQUIREMENTS.md and docs/DESIGN.md before planning any task.

@@ -1,7 +1,7 @@
 [project]
 name = "rbrs"
 version = "0.1.0"
-description = "Add your description here"
+description = "Rule-based reasoning system for SME decarbonisation recommendations (research prototype)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rbrs = "rbrs:main"
+rbrs = "rbrs.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.12.18,<0.13.0"]
@@ -33,3 +33,31 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.8",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["rbrs"]
+omit = ["src/rbrs/cli.py"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = ["E701", "RUF001", "RUF002", "RUF003"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+packages = ["rbrs"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["krippendorff", "pymupdf", "scipy.*", "yaml", "pandas"]
+ignore_missing_imports = true

@@ -1,40 +1,56 @@
 import pytest
 from pydantic import ValidationError
-from rbrs.profile.models import SMEProfile, Emissions, ResidueStream
 
-def test_valid_profile_loads():
-    profile = SMEProfile(
-        sector="Manufacturing",
-        employees_fte=50,
-        turnover_meur=5.5,
-        scope1=Emissions(tco2e=100.0, assessed=True),
-        scope2=Emissions(tco2e=50.0, assessed=True),
-        scope3=Emissions(tco2e=None, assessed=False),
-        energy_carriers=["electricity", "diesel"],
-        electricity_supply="grid_mixed",
-        thermal_fuel="diesel",
-        residues=[],
-        certifications=["ISO14001"],
-        capital_availability="moderate",
-        maturity_level=2,
-        logistics_mode="diesel_truck",
-        route_distance_km=120.5,
-        material_type="Virgin_Steel",
-        process_efficiency="medium"
+from rbrs.profile import Emissions, ExtractedField, Provenance, ResidueStream, SMEProfile, profile_coverage
+from tests.conftest import make_profile
+
+
+def test_valid_profile_loads() -> None:
+    p = make_profile()
+    assert p.sector == "Manufacturing"
+    assert p.scope3.assessed is False
+
+
+def test_missing_required_field_fails() -> None:
+    with pytest.raises(ValidationError):
+        SMEProfile(employees_fte=50)  # type: ignore[call-arg]
+
+
+def test_negative_mass_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ResidueStream(material="wood", mass_t=-5.0, disposition="landfill", moisture_content=0.2)
+
+
+def test_unassessed_scope_cannot_carry_a_value() -> None:
+    # The old E11 used tco2e=0.0 with assessed=False, which reads as "no emissions".
+    with pytest.raises(ValidationError):
+        Emissions(tco2e=0.0, assessed=False)
+    with pytest.raises(ValidationError):
+        Emissions(tco2e=None, assessed=True)
+
+
+def test_unknown_attribute_rejected() -> None:
+    with pytest.raises(ValidationError):
+        make_profile(unknown_field=1)
+
+
+def test_moisture_must_be_a_fraction() -> None:
+    with pytest.raises(ValidationError):
+        ResidueStream(material="wood", mass_t=1.0, disposition="landfill", moisture_content=20.0)
+
+
+def test_profile_coverage_counts_top_level_attributes() -> None:
+    unused = profile_coverage({"scope1.tco2e", "residues", "sector"})
+    assert "scope1" not in unused and "residues" not in unused and "sector" not in unused
+    assert "scope2" in unused and len(unused) == 17 - 3
+
+
+def test_extracted_field_consistency() -> None:
+    with pytest.raises(ValidationError):
+        ExtractedField(field="sector", value="x", status="ABSTAINED", confidence=0.5)
+    with pytest.raises(ValidationError):
+        ExtractedField(field="sector", value="x", status="EXTRACTED", confidence=0.5)
+    ok = ExtractedField(
+        field="sector", value="x", status="EXTRACTED", confidence=0.5, provenance=Provenance(page=1, quote="x")
     )
-    assert profile.sector == "Manufacturing"
-    assert profile.scope3.assessed is False
-
-def test_missing_required_field_fails():
-    with pytest.raises(ValidationError):
-        # Missing 'sector' and others
-        SMEProfile(employees_fte=50)
-
-def test_negative_mass_rejected():
-    with pytest.raises(ValidationError):
-        ResidueStream(
-            material="wood",
-            mass_t=-5.0,
-            disposition="landfill",
-            moisture_content=0.2
-        )
+    assert ok.verified_in_source is None

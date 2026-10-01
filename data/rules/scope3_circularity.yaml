@@ -1,0 +1,31 @@
+# Scope 3 and circularity rules. See scope1.yaml for the status convention.
+
+# Fixed: the rule was named "material recovery" but recommended a biofuel shift,
+# and its `any_has` check could never match a residue record. It now recommends
+# diverting wood residues that are currently burned to material use, the case
+# the cited LCA (wood products) and AC-05 describe. The constraint layer decides
+# whether the diversion actually lowers emissions.
+- id: S3C-001
+  name: Residue material recovery (constraint-bound)
+  antecedent:
+    - {field: residues, op: any_match, value: {material: wood, disposition: energy_recovery}}
+  maturity_gate: 3
+  capital_gate: moderate
+  consequent: INT-RESIDUE-MATERIAL
+  provenance: "Puettmann & Lippke (2012), Forest Products Journal 62(4):273-279"
+
+- id: S3C-002
+  name: Divert residues from landfill
+  status: draft
+  antecedent:
+    - {field: residues, op: any_match, value: {disposition: landfill}}
+  consequent: INT-LANDFILL-DIVERSION
+  provenance: "SOURCE_NEEDED"
+
+- id: S3-001
+  name: Establish a Scope 3 inventory
+  status: draft
+  antecedent:
+    - {field: scope3.assessed, op: "==", value: false}
+  consequent: INT-SCOPE3-INVENTORY
+  provenance: "SOURCE_NEEDED"

@@ -1,7 +1,0 @@
-{
-  "experiment": "E5",
-  "timestamp": 1790236855.6640363,
-  "description": "Weight sensitivity analysis (Sweep + Dirichlet)",
-  "status": "success",
-  "crossover_point": 0.615
-}

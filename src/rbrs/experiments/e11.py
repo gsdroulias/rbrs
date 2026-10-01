@@ -1,85 +1,64 @@
-﻿import json
-import time
-import random
-import csv
-from pathlib import Path
-from rbrs.profile.models import SMEProfile, Emissions, ResidueStream
-from rbrs.rules.models import load_rules
-from rbrs.inference.engine import InferenceEngine
+"""E11: synthetic cohort (FR-15, FR-16): rule coverage and pipeline scalability.
 
-def run_e11(num_samples: int = 100) -> None:
-    out_dir = Path("results/E11")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    
-    rules = load_rules("data/rules")
-    engine = InferenceEngine(rules)
-    
-    sectors = ["Manufacturing", "Logistics", "Retail", "IT"]
-    results = []
-    intervention_counts: dict[str, int] = {}
-    
-    for i in range(num_samples):
-        sector = random.choice(sectors)
-        has_biomass = random.random() < 0.30
-        
-        # FIXED: Η διάθεση είναι "energy_recovery" σύμφωνα με το Pydantic Schema
-        residues_list = [
-            ResidueStream(
-                material="biomass", 
-                mass_t=50.0, 
-                disposition="energy_recovery",
-                moisture_content=0.15
-            )
-        ] if has_biomass else []
-        
-        profile = SMEProfile(
-            sector=sector,
-            employees_fte=random.randint(10, 250),
-            turnover_meur=random.uniform(1.0, 50.0),
-            scope1=Emissions(tco2e=random.uniform(10, 1000), assessed=True),
-            scope2=Emissions(tco2e=random.uniform(10, 500), assessed=True),
-            scope3=Emissions(tco2e=0.0, assessed=False),
-            energy_carriers=["electricity", "diesel"] if sector in ["Manufacturing", "Logistics"] else ["electricity"],
-            electricity_supply="grid_mixed",
-            thermal_fuel="diesel" if sector == "Manufacturing" else "none",
-            residues=residues_list,
-            certifications=[],
-            capital_availability=random.choice(["low", "moderate", "high"]),
-            maturity_level=random.choice([1, 2, 3]),  # type: ignore
-            logistics_mode=random.choice(["diesel_truck", "rail", "electric_van"]),  # type: ignore
-            route_distance_km=random.uniform(50, 2000),
-            material_type="none",
-            process_efficiency="medium"
-        )
-        
-        recs = engine.run(profile)
-        results.append({
-            "id": f"SME-{i:03d}",
-            "sector": sector,
-            "recommendations": "|".join(recs)
-        })
-        
-        for r in recs:
-            intervention_counts[r] = intervention_counts.get(r, 0) + 1
-            
-    csv_path = out_dir / "cohort_results.csv"
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["id", "sector", "recommendations"])
-        writer.writeheader()
-        writer.writerows(results)
-        
-    manifest = {
-        "experiment": "E11",
-        "timestamp": time.time(),
-        "description": "Synthetic Cohort Generation. Now successfully testing constraint-bound biomass shifts.",
-        "samples": num_samples,
-        "intervention_frequencies": intervention_counts
+This shows which rules and interventions the cohort exercises and that the
+pipeline runs at scale. It says nothing about whether recommendations are right.
+"""
+
+import json
+import time
+from collections import Counter
+from typing import Any
+
+from rbrs.experiments.common import start_run, write_csv, write_json, write_text
+from rbrs.inference import activation_stats
+from rbrs.pipeline import KnowledgeBase, recommend, report_rows
+from rbrs.profile import profile_coverage
+from rbrs.rules import fields_read
+from rbrs.synthetic import generate_cohort, load_config
+
+
+def run_e11(include_drafts: bool = False, allow_dirty: bool = True) -> dict[str, Any]:
+    cfg = load_config()
+    run = start_run(
+        "E11",
+        seed=cfg["seed"],
+        params={"synthetic_config": "data/experiments/synthetic.yaml", "include_drafts": include_drafts},
+        allow_dirty=allow_dirty,
+    )
+    kb = KnowledgeBase.load(include_drafts=include_drafts)
+    cohort = generate_cohort(cfg)
+    write_text(
+        run.path("profiles.jsonl"),
+        "".join(json.dumps({"id": pid, **p.model_dump(mode="json")}, sort_keys=True) + "\n" for pid, p in cohort),
+    )
+
+    t0 = time.perf_counter()
+    reports = [recommend(p, kb, profile_id=pid) for pid, p in cohort]
+    elapsed = time.perf_counter() - t0
+
+    rows = [r for rep in reports for r in report_rows(rep)]
+    write_csv(run.path("cohort_recommendations.csv"), rows, columns=list(rows[0]) if rows else ["profile_id"])
+    freq = Counter(s.intervention_id for rep in reports for s in rep.interventions)
+    stats = activation_stats(kb.rules, [p for _, p in cohort])
+    unused = profile_coverage(fields_read(kb.rules))
+    write_json(
+        run.path("coverage.json"),
+        {
+            "intervention_frequency": dict(sorted(freq.items())),
+            "rule_activation": stats["activation_frequency"],
+            "dead_rules": stats["dead_rules"],
+            "profile_attributes_unused": unused,
+            "profiles_without_candidates": [rep.profile_id for rep in reports if not rep.interventions],
+        },
+    )
+    summary = {
+        "profiles": len(cohort),
+        "stratified": sum(pid.startswith("SYN-S") for pid, _ in cohort),
+        "intervention_frequency": dict(sorted(freq.items())),
+        "dead_rules": stats["dead_rules"],
+        "profile_attributes_unused": unused,
+        "profiles_with_ranked_candidates": sum(bool(rep.ranking) for rep in reports),
+        "runtime_seconds_not_reproducible": round(elapsed, 3),
     }
-    
-    manifest_path = out_dir / "manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-        
-    print(f"\n--- SUCCESS ---")
-    print(f"Experiment E11: Generated {num_samples} synthetic SMEs.")
-    print(f"Intervention frequencies: {intervention_counts}")
+    run.finish("COMPLETED", summary)
+    return summary

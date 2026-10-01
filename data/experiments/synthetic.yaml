@@ -1,0 +1,33 @@
+# Synthetic SME cohort (FR-15). These distributions are experimental design
+# assumptions, not empirical estimates; the paper should say so. The cohort
+# tests coverage and robustness of the decision layer, not recommendation quality.
+seed: 42
+n_total: 100
+# 3 x 3 x 3 = 27 stratified profiles, one per combination; the rest are random.
+strata:
+  maturity_level: [1, 2, 3]
+  capital_availability: [low, moderate, high]
+  process_efficiency: [low, medium, high]
+sectors: [Manufacturing, Logistics, Retail, Food processing, Wood products]
+# EU SME definition (Recommendation 2003/361/EC): < 250 employees, turnover <= EUR 50 M.
+employees_fte: [10, 249]
+turnover_meur: [0.5, 50.0]
+p_turnover_missing: 0.1
+# Log-uniform ranges, tCO2e per year.
+scope1_tco2e: [5.0, 2000.0]
+scope2_tco2e: [5.0, 1000.0]
+scope3_tco2e: [50.0, 10000.0]
+p_scope3_assessed: 0.3
+thermal_fuels: [natural_gas, diesel, heating_oil, lpg, wood, null]
+logistics_modes: [diesel_truck, rail, electric_van]
+route_distance_km: [10.0, 1500.0]
+p_route_missing: 0.1
+electricity_supply: [grid, grid_mixed, green_tariff, onsite]
+p_residues: 0.5
+residue_materials: [wood, metal, plastic, paper]
+residue_dispositions: [landfill, energy_recovery, material_recovery]
+residue_mass_t: [1.0, 500.0]
+residue_moisture: [0.10, 0.50]
+certifications: [ISO14001, ISO50001, ISO9001]
+p_certification: 0.2
+material_types: [Steel, Aluminium, Wood, Plastics, Food, Paper]

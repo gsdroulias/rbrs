@@ -1,0 +1,90 @@
+# Scope 1 rules (direct emissions: fuels, own fleet).
+#
+# status: active  -> sourced and reviewed; used in paper runs.
+# status: draft   -> proposed rule; provenance must be supplied and the rule
+#                    reviewed before it is set to active. Excluded by default.
+# Derivation rules (`derive:`) classify profile facts so that other rules can
+# chain on them (FR-07). They are definitional and need no external source.
+
+- id: D1-001
+  name: Fossil thermal fuel in use
+  antecedent:
+    - {field: thermal_fuel, op: in, value: [diesel, natural_gas, heating_oil, lpg, coal]}
+  derive: {fossil_thermal: true}
+  provenance: "Definitional: classification of the profile's thermal fuel"
+
+- id: D1-002
+  name: Fossil road freight in use
+  antecedent:
+    - {field: logistics_mode, op: "==", value: diesel_truck}
+  derive: {fossil_road_freight: true}
+  provenance: "Definitional: classification of the profile's logistics mode"
+
+- id: S1-001
+  name: Fleet route optimization
+  antecedent:
+    - {field: scope1.tco2e, op: ">", value: 0}
+    - {field: logistics_mode, op: in, value: [diesel_truck, electric_van]}
+  maturity_gate: 2
+  capital_gate: low
+  consequent: INT-ROUTE-OPT
+  provenance: "WBCSD/Route Monkey (2016), Road Freight Lab"
+
+- id: S1-002
+  name: Fleet electrification
+  status: draft
+  antecedent:
+    - {field: facts.fossil_road_freight, op: "==", value: true}
+  maturity_gate: 2
+  capital_gate: moderate
+  consequent: INT-FLEET-EV
+  provenance: "SOURCE_NEEDED"
+
+- id: S1-003
+  name: Eco-driving training
+  status: draft
+  antecedent:
+    - {field: facts.fossil_road_freight, op: "==", value: true}
+  consequent: INT-ECO-DRIVING
+  provenance: "SOURCE_NEEDED"
+
+- id: S1-004
+  name: Modal shift of freight to rail
+  status: draft
+  antecedent:
+    - {field: facts.fossil_road_freight, op: "==", value: true}
+    - {field: route_distance_km, op: not_null}  # a sourced minimum distance belongs here
+  maturity_gate: 2
+  consequent: INT-MODAL-RAIL
+  provenance: "SOURCE_NEEDED"
+
+- id: S1-005
+  name: Heat pump for low-temperature process heat
+  status: draft
+  antecedent:
+    - {field: facts.fossil_thermal, op: "==", value: true}
+  maturity_gate: 2
+  capital_gate: moderate
+  consequent: INT-HEAT-PUMP
+  provenance: "SOURCE_NEEDED"
+
+- id: S1-006
+  name: Boiler and burner efficiency upgrade
+  status: draft
+  antecedent:
+    - {field: facts.fossil_thermal, op: "==", value: true}
+    - {field: process_efficiency, op: in, value: [low, medium]}
+  capital_gate: low_moderate
+  consequent: INT-BOILER-EFF
+  provenance: "SOURCE_NEEDED"
+
+- id: S1-007
+  name: Waste heat recovery
+  status: draft
+  antecedent:
+    - {field: facts.fossil_thermal, op: "==", value: true}
+    - {field: process_efficiency, op: "==", value: low}
+  maturity_gate: 2
+  capital_gate: moderate
+  consequent: INT-HEAT-RECOVERY
+  provenance: "SOURCE_NEEDED"

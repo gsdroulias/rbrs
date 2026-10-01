@@ -1,0 +1,48 @@
+# Scope 2 rules (purchased electricity). See scope1.yaml for the status convention.
+
+- id: S2-001
+  name: High-efficiency equipment and LED retrofit
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+    - {field: electricity_supply, op: in, value: [grid, grid_mixed]}
+  maturity_gate: 1
+  consequent: INT-LED-EFF
+  provenance: "IPCC AR6 WGIII (2022), Chapter 11 Industry"
+
+# The former antecedent `capital_availability in [moderate, high]` duplicated the
+# capital gate and was removed; behaviour is unchanged.
+- id: S2-002
+  name: On-site Solar PV installation
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+  maturity_gate: 2
+  capital_gate: moderate
+  consequent: INT-SOLAR-PV
+  provenance: "IEA (2019), Renewables 2019"
+
+- id: S2-003
+  name: Green electricity tariff or PPA (market-based)
+  status: draft
+  antecedent:
+    - {field: scope2.tco2e, op: ">", value: 0}
+    - {field: electricity_supply, op: in, value: [grid, grid_mixed]}
+  consequent: INT-GREEN-TARIFF
+  provenance: "SOURCE_NEEDED"
+
+- id: S2-004
+  name: Energy management system (ISO 50001)
+  status: draft
+  antecedent:
+    - {field: certifications, op: not_contains, value: ISO50001}
+    - {field: process_efficiency, op: in, value: [low, medium]}
+  maturity_gate: 2
+  consequent: INT-ENMS
+  provenance: "SOURCE_NEEDED"
+
+- id: S2-005
+  name: Energy audit for low-maturity firms
+  status: draft
+  antecedent:
+    - {field: maturity_level, op: "==", value: 1}
+  consequent: INT-ENERGY-AUDIT
+  provenance: "SOURCE_NEEDED"

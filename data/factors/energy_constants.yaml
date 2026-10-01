@@ -1,0 +1,21 @@
+# Heating values, efficiencies and physical constants. Same rules as emission_factors.yaml.
+
+- id: latent_heat_vaporisation_water
+  value: 2.443
+  unit: "MJ/kg"
+  source: "ISO 18125:2017 Solid biofuels - Determination of calorific value (as-received net calorific value: q_net,ar = q_net,d (1 - M) - 2.443 M)"
+  verified_by_author: false
+
+- id: lhv_dry_wood
+  value: null
+  unit: "MJ/kg"
+  source: SOURCE_NEEDED
+  status: SOURCE_NEEDED
+  notes: "Dry-basis net calorific value of the case firm's wood residue (species-dependent)."
+
+- id: eta_boiler_replacement
+  value: null
+  unit: "fraction"
+  source: SOURCE_NEEDED
+  status: SOURCE_NEEDED
+  notes: "Efficiency of the boiler that would supply the heat lost when residues are diverted."

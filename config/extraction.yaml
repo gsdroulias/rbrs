@@ -1,0 +1,19 @@
+# Extraction (perception layer) configuration. Pinned for reproducibility (NFR-01).
+#
+# model_id: set to the exact, versioned Gemini model ID used for the paper and
+#   never change it between runs that are compared. Extraction refuses to run
+#   while this is SET_ME.
+# Temperature is left at the provider default (DESIGN.md: Gemini 3 guidance);
+# stability is measured instead, by running each document `runs` times.
+model_id: SET_ME
+thinking_level: null        # e.g. low / high; null = provider default
+media_resolution: MEDIA_RESOLUTION_MEDIUM
+prompt: prompts/extraction_v2.md
+runs: 3
+# FR-04: fields with confidence below this are abstained and routed to a human.
+# Calibrate on the development split with `rbrs calibrate`; null = no threshold.
+abstention_threshold: null
+# E9 calibration target: lowest threshold reaching this precision on the dev split.
+target_precision: 0.95
+# Relative tolerance when comparing extracted numbers with gold values.
+numeric_rel_tol: 0.001

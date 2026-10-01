@@ -1,4 +1,4 @@
-﻿SYSTEM ROLE: You are an expert ESG data extraction analyst.
+SYSTEM ROLE: You are an expert ESG data extraction analyst.
 TASK: Extract SME profile attributes from the provided unstructured corporate text.
 CONSTRAINTS:
 1. Be strictly objective.
