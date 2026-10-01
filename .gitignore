@@ -3,3 +3,6 @@ results/
 data/corpus/
 *.pdf
 .env
+
+__pycache__/
+*.pyc
