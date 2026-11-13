@@ -1,0 +1,19 @@
+{
+  "experiment": "E10",
+  "timestamp": 1794559401.3835955,
+  "description": "Monte Carlo Sensitivity Analysis on SAW weights to prove ranking robustness.",
+  "iterations": 10000,
+  "base_weights": {
+    "ghg": 0.5,
+    "cost": 0.3,
+    "feasibility": 0.2
+  },
+  "base_top_candidate": "INT-ROUTE-OPT",
+  "rank_stability_pct": 67.57,
+  "distribution": {
+    "INT-LED-EFF": 547,
+    "INT-SOLAR-PV": 2696,
+    "INT-BIOFUEL-SHIFT": 0,
+    "INT-ROUTE-OPT": 6757
+  }
+}
